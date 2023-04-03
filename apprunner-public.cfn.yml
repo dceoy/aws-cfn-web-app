@@ -61,12 +61,17 @@ Resources:
             # RuntimeEnvironmentVariables: []
             # StartCommand: ''
 Outputs:
-  AppRunner:
-    Description: AppRunner
+  AppRunnerId:
+    Description: AppRunner Id
+    Value: !Ref AppRunner
+    Export:
+      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunner
+  AppRunnerServiceUrl:
+    Description: AppRunner Service URL
     Value:
       Fn::Join:
         - ''
         - - https://
           - !GetAtt AppRunner.ServiceUrl
     Export:
-      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunner
+      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunnerServiceUrl

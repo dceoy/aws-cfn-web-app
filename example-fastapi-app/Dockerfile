@@ -32,7 +32,7 @@ RUN set -e \
       && mkdir -p "${PYTHONPATH}" \
       && mv /tmp/main.py "${PYTHONPATH}"
 
-EXPOSE 8080
+EXPOSE 8000
 
 ENTRYPOINT ["/usr/local/bin/uvicorn"]
-CMD ["main:app", "--port=8080", "--host=0.0.0.0", "--reload"]
+CMD ["main:app", "--port=8000", "--host=0.0.0.0", "--reload"]

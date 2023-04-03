@@ -40,7 +40,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       VpcId:
-        Fn::ImportValue: !Sub ${VpcStackName}-VPC
+        Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-VPC
       GroupName: !Sub ${ProjectName}-apprunner-security-group
       GroupDescription: Security group for App Runner
       Tags:
@@ -48,20 +48,16 @@ Resources:
           Value: !Sub ${ProjectName}-security-group
   AppRunnerVpcConnector:
     Type: AWS::AppRunner::VpcConnector
-    DependsOn:
-      - AppRunnerSecurityGroup
     Properties:
       VpcConnectorName: !Sub ${ProjectName}-apprunner-vpc-connector
       Subnets:
-        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnet0
-        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnet1
-        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnet2
+        - Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-PrivateSubnet0
+        - Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-PrivateSubnet1
+        - Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-PrivateSubnet2
       SecurityGroups:
         - !Ref AppRunnerSecurityGroup
   AppRunner:
     Type: AWS::AppRunner::Service
-    DependsOn:
-      - AppRunnerVpcConnector
     Properties:
       ServiceName: !Sub ${ProjectName}-apprunner-private
       # AutoScalingConfigurationArn: ''
@@ -73,13 +69,16 @@ Resources:
         Timeout: 2
         UnhealthyThreshold: 5
       InstanceConfiguration:
-        Cpu: !Ref CPU
+        Cpu: !Ref Cpu
         Memory: !Ref Memory
-        InstanceRoleArn: !GetAtt AppRunnerInstanceRole.Arn
+        InstanceRoleArn:
+          Fn::ImportValue: !Sub ${AWS::Region}-${IamStackName}-AppRunnerInstanceRole
       NetworkConfiguration:
         EgressConfiguration:
           EgressType: VPC
-          VpcConnectorArn: !GetAtt VpcConnector.VpcConnectorArn
+          VpcConnectorArn: !GetAtt AppRunnerVpcConnector.VpcConnectorArn
+        IngressConfiguration:
+          IsPubliclyAccessible: false
       SourceConfiguration:
         AuthenticationConfiguration:
           AccessRoleArn:
@@ -94,12 +93,13 @@ Resources:
             # RuntimeEnvironmentVariables: []
             # StartCommand: ''
 Outputs:
-  AppRunner:
-    Description: AppRunner
-    Value:
-      Fn::Join:
-        - ''
-        - - https://
-          - !GetAtt AppRunner.ServiceUrl
+  AppRunnerId:
+    Description: AppRunner Id
+    Value: !Ref AppRunner
     Export:
       Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunner
+  AppRunnerSecurityGroupId:
+    Description: AppRunnerSecurityGroup Id
+    Value: !Ref AppRunnerSecurityGroup
+    Export:
+      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunnerSecurityGroup
