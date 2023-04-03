@@ -33,8 +33,8 @@ Installation
 
       ```sh
       $ rain deploy \
-        --params ProjectName=webapp-dev,IamStackName=iam-roles-for-apprunner \
-        apprunner-public.cfn.yml webapp-dev-apprunner-public
+          --params ProjectName=webapp-dev,IamStackName=webapp-dev-iam-roles-for-apprunner \
+          apprunner-public.cfn.yml webapp-dev-apprunner-public
       ```
 
     - private web application
@@ -43,8 +43,8 @@ Installation
       $ rain deploy \
           --params ProjectName=webapp-dev \
           aws-cfn-vpc-for-slc/vpc-private-subnets-with-endpoints.cfn.yml \
-          webapp-dev-vpc-private
+          webapp-dev-vpc-private-subnets-with-endpoints
       $ rain deploy \
-          --params ProjectName=webapp-dev,IamStackName=iam-roles-for-apprunner,VpcStackName=webapp-dev-vpc-private \
+          --params ProjectName=webapp-dev,IamStackName=webapp-dev-iam-roles-for-apprunner,VpcStackName=webapp-dev-vpc-private-subnets-with-endpoints \
           apprunner-private.cfn.yml webapp-dev-apprunner-private
       ```
