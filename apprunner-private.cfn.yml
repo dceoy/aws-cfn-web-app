@@ -10,6 +10,10 @@ Parameters:
     Description: Set the IAM stack name.
     Type: String
     Default: webapp-iam-roles-for-apprunner
+  VpcStackName:
+    Description: Set the VPC stack name.
+    Type: String
+    Default: webapp-vpc-private-subnets-with-endpoints
   EcrImageName:
     Description: Set the ECR image name.
     Type: String
@@ -20,20 +24,46 @@ Parameters:
   Cpu:
     Description: Set the number of CPU units reserved.
     Type: String
+    AllowedPattern: 1024|2048|(1|2) vCPU
     Default: 1 vCPU
   Memory:
     Description: Set the amount of memory, in MB or GB, reserved.
     Type: String
+    AllowedPattern: 2048|3072|4096|(2|3|4) GB
     Default: 2 GB
   ImagePort:
     Description: Set the port that the application listens to in the container.
     Type: String
     Default: 8080
 Resources:
+  AppRunnerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VPC
+      GroupName: !Sub ${ProjectName}-apprunner-security-group
+      GroupDescription: Security group for App Runner
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-security-group
+  AppRunnerVpcConnector:
+    Type: AWS::AppRunner::VpcConnector
+    DependsOn:
+      - AppRunnerSecurityGroup
+    Properties:
+      VpcConnectorName: !Sub ${ProjectName}-apprunner-vpc-connector
+      Subnets:
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnet0
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnet1
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnet2
+      SecurityGroups:
+        - !Ref AppRunnerSecurityGroup
   AppRunner:
     Type: AWS::AppRunner::Service
+    DependsOn:
+      - AppRunnerVpcConnector
     Properties:
-      ServiceName: !Sub ${ProjectName}-apprunner-public
+      ServiceName: !Sub ${ProjectName}-apprunner-private
       # AutoScalingConfigurationArn: ''
       HealthCheckConfiguration:
         HealthyThreshold: 1
@@ -43,10 +73,13 @@ Resources:
         Timeout: 2
         UnhealthyThreshold: 5
       InstanceConfiguration:
-        Cpu: !Ref Cpu
+        Cpu: !Ref CPU
         Memory: !Ref Memory
-        InstanceRoleArn:
-          Fn::ImportValue: !Sub ${AWS::Region}-${IamStackName}-AppRunnerInstanceRole
+        InstanceRoleArn: !GetAtt AppRunnerInstanceRole.Arn
+      NetworkConfiguration:
+        EgressConfiguration:
+          EgressType: VPC
+          VpcConnectorArn: !GetAtt VpcConnector.VpcConnectorArn
       SourceConfiguration:
         AuthenticationConfiguration:
           AccessRoleArn:

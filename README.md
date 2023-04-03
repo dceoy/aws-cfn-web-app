@@ -24,7 +24,7 @@ Installation
     ```sh
     $ rain deploy \
         --params ProjectName=webapp-dev \
-        iam-roles-for-apprunner.cfn.yml iam-roles-for-apprunner
+        iam-roles-for-apprunner.cfn.yml webapp-dev-iam-roles-for-apprunner
     ```
 
 5.  Deploy stacks for App Runner.
@@ -34,7 +34,7 @@ Installation
       ```sh
       $ rain deploy \
         --params ProjectName=webapp-dev,IamStackName=iam-roles-for-apprunner \
-        apprunner-public.cfn.yml apprunner-public
+        apprunner-public.cfn.yml webapp-dev-apprunner-public
       ```
 
     - private web application
@@ -46,5 +46,5 @@ Installation
           webapp-dev-vpc-private
       $ rain deploy \
           --params ProjectName=webapp-dev,IamStackName=iam-roles-for-apprunner,VpcStackName=webapp-dev-vpc-private \
-          apprunner-private.cfn.yml apprunner-private
+          apprunner-private.cfn.yml webapp-dev-apprunner-private
       ```

@@ -33,10 +33,27 @@ Resources:
                   - ecr:DescribeImages
                   - ecr:GetAuthorizationToken
                   - ecr:BatchCheckLayerAvailability
-                Resource: '*'
+                Resource:
+                  - '*'
+  AppRunnerInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - tasks.apprunner.amazonaws.com
+            Action:
+              - sts:AssumeRole
 Outputs:
   AppRunnerECRAccessRole:
     Value: !GetAtt AppRunnerECRAccessRole.Arn
     Description: AppRunnerECRAccessRole
     Export:
       Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunnerECRAccessRole
+  AppRunnerInstanceRole:
+    Value: !GetAtt AppRunnerInstanceRole.Arn
+    Description: AppRunnerInstanceRole
+    Export:
+      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunnerInstanceRole
