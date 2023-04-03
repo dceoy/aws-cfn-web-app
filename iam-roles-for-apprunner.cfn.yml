@@ -1,0 +1,42 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: IAM roles for App Runner
+Parameters:
+  ProjectName:
+    Description: Set the project name.
+    Type: String
+    Default: webapp
+Resources:
+  AppRunnerECRAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-AppRunnerECRAccessRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - build.apprunner.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: !Sub ${ProjectName}-ECRAccess-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:DescribeImages
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                Resource: '*'
+Outputs:
+  AppRunnerECRAccessRole:
+    Value: !GetAtt AppRunnerECRAccessRole.Arn
+    Description: AppRunnerECRAccessRole
+    Export:
+      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunnerECRAccessRole

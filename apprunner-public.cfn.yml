@@ -1,0 +1,55 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: App Runner for a public web application
+Parameters:
+  ProjectName:
+    Description: Set the project name.
+    Type: String
+    Default: webapp
+  IamStackName:
+    Description: Set the IAM stack name.
+    Type: String
+    Default: iam-roles-for-apprunner
+  EcrImageName:
+    Description: Set the ECR image name.
+    Type: String
+  EcrImageTag:
+    Description: Set the ECR image tag.
+    Type: String
+    Default: latest
+  Cpu:
+    Description: Set the number of CPU units reserved.
+    Type: String
+    Default: 1 vCPU
+  Memory:
+    Description: Set the amount of memory, in MB or GB, reserved.
+    Type: String
+    Default: 2 GB
+Resources:
+  AppRunner:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Sub ${ProjectName}-apprunner-public
+      SourceConfiguration:
+        AuthenticationConfiguration:
+          AccessRoleArn:
+            Fn::ImportValue: !Sub ${AWS::Region}-${IamStackName}-AppRunnerECRAccessRole
+        AutoDeploymentsEnabled: true
+        ImageRepository:
+          ImageRepositoryType: ECR
+          ImageIdentifier: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${EcrImageName}:${EcrImageTag}
+          ImageConfiguration:
+            Port: 8080
+        InstanceConfiguration:
+          Cpu: !Ref Cpu
+          Memory: !Ref Memory
+Outputs:
+  AppRunner:
+    Description: AppRunner
+    Value:
+      Fn::Join:
+        - ''
+        - - https://
+          - !GetAtt AppRunner.ServiceUrl
+    Export:
+      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunner
