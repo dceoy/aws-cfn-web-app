@@ -17,7 +17,7 @@ Installation
 
 2.  Install [Rain](https://github.com/aws-cloudformation/rain) and set `~/.aws/config` and `~/.aws/credentials`.
 
-3.  Push a container image to ECR.
+3.  Push a web application container image to ECR.
 
 4.  Deploy stacks for IAM roles.
 

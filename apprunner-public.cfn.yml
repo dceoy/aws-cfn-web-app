@@ -30,10 +30,16 @@ Parameters:
     Type: String
     Default: 8080
 Resources:
-  AppRunner:
+  AppRunnerObservabilityConfiguration:
+    Type: AWS::AppRunner::ObservabilityConfiguration
+    Properties:
+      ObservabilityConfigurationName: !Sub ${ProjectName}-ar-xray-tracing
+      TraceConfiguration:
+        Vendor: AWSXRAY
+  AppRunnerService:
     Type: AWS::AppRunner::Service
     Properties:
-      ServiceName: !Sub ${ProjectName}-apprunner-public
+      ServiceName: !Sub ${ProjectName}-ar-service-public
       # AutoScalingConfigurationArn: ''
       HealthCheckConfiguration:
         HealthyThreshold: 1
@@ -47,6 +53,9 @@ Resources:
         Memory: !Ref Memory
         InstanceRoleArn:
           Fn::ImportValue: !Sub ${AWS::Region}-${IamStackName}-AppRunnerInstanceRole
+      ObservabilityConfiguration:
+        ObservabilityConfigurationArn: !Ref AppRunnerObservabilityConfiguration
+        ObservabilityEnabled: true
       SourceConfiguration:
         AuthenticationConfiguration:
           AccessRoleArn:
@@ -61,17 +70,17 @@ Resources:
             # RuntimeEnvironmentVariables: []
             # StartCommand: ''
 Outputs:
-  AppRunnerId:
-    Description: AppRunner Id
-    Value: !Ref AppRunner
+  AppRunnerServiceId:
+    Description: AppRunner Service Id
+    Value: !Ref AppRunnerService
     Export:
-      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunner
+      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunnerService
   AppRunnerServiceUrl:
     Description: AppRunner Service URL
     Value:
       Fn::Join:
         - ''
         - - https://
-          - !GetAtt AppRunner.ServiceUrl
+          - !GetAtt AppRunnerService.ServiceUrl
     Export:
       Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunnerServiceUrl

@@ -41,25 +41,53 @@ Resources:
     Properties:
       VpcId:
         Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-VPC
-      GroupName: !Sub ${ProjectName}-apprunner-security-group
+      GroupName: !Sub ${ProjectName}-ar-security-group
       GroupDescription: Security group for App Runner
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-security-group
+  AppRunnerRequestsInterfaceEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      # # VPC endpoint policies are not supported for App Runner.
+      # PolicyDocument:
+      #   Version: 2012-10-17
+      #   Statement:
+      #     - Resource: '*'
+      #       Effect: Allow
+      #       Principal: '*'
+      #       Action: '*'
+      # PrivateDnsEnabled: true
+      SubnetIds:
+        - Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-PrivateSubnet0
+        - Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-PrivateSubnet1
+        - Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref AppRunnerSecurityGroup
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.apprunner.requests
+      VpcEndpointType: Interface
+      VpcId:
+        Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-VPC
   AppRunnerVpcConnector:
     Type: AWS::AppRunner::VpcConnector
     Properties:
-      VpcConnectorName: !Sub ${ProjectName}-apprunner-vpc-connector
+      VpcConnectorName: !Sub ${ProjectName}-ar-vpc-connector
       Subnets:
         - Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-PrivateSubnet0
         - Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-PrivateSubnet1
         - Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-PrivateSubnet2
       SecurityGroups:
         - !Ref AppRunnerSecurityGroup
-  AppRunner:
+  AppRunnerObservabilityConfiguration:
+    Type: AWS::AppRunner::ObservabilityConfiguration
+    Properties:
+      ObservabilityConfigurationName: !Sub ${ProjectName}-ar-xray-tracing
+      TraceConfiguration:
+        Vendor: AWSXRAY
+  AppRunnerService:
     Type: AWS::AppRunner::Service
     Properties:
-      ServiceName: !Sub ${ProjectName}-apprunner-private
+      ServiceName: !Sub ${ProjectName}-ar-service-private
       # AutoScalingConfigurationArn: ''
       HealthCheckConfiguration:
         HealthyThreshold: 1
@@ -79,6 +107,9 @@ Resources:
           VpcConnectorArn: !GetAtt AppRunnerVpcConnector.VpcConnectorArn
         IngressConfiguration:
           IsPubliclyAccessible: false
+      ObservabilityConfiguration:
+        ObservabilityConfigurationArn: !Ref AppRunnerObservabilityConfiguration
+        ObservabilityEnabled: true
       SourceConfiguration:
         AuthenticationConfiguration:
           AccessRoleArn:
@@ -92,12 +123,21 @@ Resources:
             # RuntimeEnvironmentSecrets: []
             # RuntimeEnvironmentVariables: []
             # StartCommand: ''
+  AppRunnerVpcIngressConnection:
+    Type: AWS::AppRunner::VpcIngressConnection
+    Properties:
+      VpcIngressConnectionName: !Sub ${ProjectName}-ar-vpc-ingress-connection
+      IngressVpcConfiguration:
+        VpcId:
+          Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-VPC
+        VpcEndpointId: !Ref AppRunnerRequestsInterfaceEndpoint
+      ServiceArn: !Ref AppRunnerService
 Outputs:
-  AppRunnerId:
-    Description: AppRunner Id
-    Value: !Ref AppRunner
+  AppRunnerServiceId:
+    Description: AppRunner Service Id
+    Value: !Ref AppRunnerService
     Export:
-      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunner
+      Name: !Sub ${AWS::Region}-${AWS::StackName}-AppRunnerService
   AppRunnerSecurityGroupId:
     Description: AppRunnerSecurityGroup Id
     Value: !Ref AppRunnerSecurityGroup
