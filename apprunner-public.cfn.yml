@@ -5,11 +5,11 @@ Parameters:
   ProjectName:
     Description: Set the project name.
     Type: String
-    Default: webapp
+    Default: wa
   IamStackName:
     Description: Set the IAM stack name.
     Type: String
-    Default: webapp-iam-roles-for-apprunner
+    Default: iam-roles-for-apprunner
   EcrImageName:
     Description: Set the ECR image name.
     Type: String

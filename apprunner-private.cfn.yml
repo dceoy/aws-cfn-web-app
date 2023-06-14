@@ -5,15 +5,15 @@ Parameters:
   ProjectName:
     Description: Set the project name.
     Type: String
-    Default: webapp
+    Default: wa
   IamStackName:
     Description: Set the IAM stack name.
     Type: String
-    Default: webapp-iam-roles-for-apprunner
+    Default: iam-roles-for-apprunner
   VpcStackName:
     Description: Set the VPC stack name.
     Type: String
-    Default: webapp-vpc-private-subnets-with-endpoints
+    Default: vpc-private-subnets-with-endpoints
   EcrImageName:
     Description: Set the ECR image name.
     Type: String
@@ -40,7 +40,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       VpcId:
-        Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-VPC
+        Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-Vpc
       GroupName: !Sub ${ProjectName}-ar-security-group
       GroupDescription: Security group for App Runner
       SecurityGroupIngress:
@@ -72,7 +72,7 @@ Resources:
       ServiceName: !Sub com.amazonaws.${AWS::Region}.apprunner.requests
       VpcEndpointType: Interface
       VpcId:
-        Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-VPC
+        Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-Vpc
   AppRunnerVpcConnector:
     Type: AWS::AppRunner::VpcConnector
     Properties:
@@ -134,7 +134,7 @@ Resources:
       VpcIngressConnectionName: !Sub ${ProjectName}-ar-vpc-ingress-connection
       IngressVpcConfiguration:
         VpcId:
-          Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-VPC
+          Fn::ImportValue: !Sub ${AWS::Region}-${VpcStackName}-Vpc
         VpcEndpointId: !Ref AppRunnerRequestsInterfaceEndpoint
       ServiceArn: !Ref AppRunnerService
 Outputs:
